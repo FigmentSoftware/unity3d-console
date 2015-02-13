@@ -11,6 +11,10 @@ public class ConsoleGUI : MonoBehaviour {
     private bool focus = false;
     private const int WINDOW_ID = 50;
 
+	public bool preventInput = false;
+	public int preventInputFrames = 60;
+	public int preventInputTimer;
+
     private void Start() {
         consoleRect = new Rect(0, 0, Screen.width, Mathf.Min(300, Screen.height));
         consoleLog = ConsoleLog.Instance;
@@ -18,11 +22,23 @@ public class ConsoleGUI : MonoBehaviour {
 
     private void OnEnable() {
         focus = true;
+		preventInput = true;
+		preventInputTimer = Time.frameCount;
     }
 
     private void OnDisable() {
         focus = true;
     }
+
+	void Update() {
+
+		if (preventInput == true) {
+			if (Time.frameCount >= (preventInputTimer + preventInputFrames)) {
+				preventInput = false;
+			}
+		}
+
+	}
 
     public void OnGUI() {
         GUILayout.Window(WINDOW_ID, consoleRect, RenderWindow, "Console");
@@ -36,7 +52,12 @@ public class ConsoleGUI : MonoBehaviour {
         GUILayout.Label(consoleLog.log);
         GUILayout.EndScrollView();
         GUI.SetNextControlName("input");
-        input = GUILayout.TextField(input);
+		if (preventInput == true) {
+			input = GUILayout.TextField("");
+		} else {
+        	input = GUILayout.TextField(input);
+		}
+
         if (focus) {
             GUI.FocusControl("input");
             focus = false;
@@ -60,6 +81,6 @@ public class ConsoleGUI : MonoBehaviour {
     }
 
     private bool KeyDown(string key) {
-        return Event.current.Equals(Event.KeyboardEvent(key));
+		return Event.current.Equals(Event.KeyboardEvent(key));
     }
 }
